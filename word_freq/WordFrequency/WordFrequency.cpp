@@ -1,20 +1,19 @@
 #include <string>
 #include <vector>
-#include <map>
-#include <algorithm>
 #include <iostream>
+#include <iomanip>
 
 #include "textreader.h"
-#include "parallel.h"
+#include "wordfreq.h"
 
 using namespace std;
 
 int main(int argc, const char** argv)
 {
-    if (argc != 2)
-    {
-        exit(-1);
-    }
+	if (argc != 2)
+	{
+		exit(-1);
+	}
 
 	ifstream infile(argv[1]);
 
@@ -27,22 +26,18 @@ int main(int argc, const char** argv)
 	// lines contain 1 or more complete words
 	//   no lines contain partial words
 	//   lines are delimited by "\r\n"
-	// "egalitarian" parallel processing of the data is not going to be easy in the alloted time
+	// effective "egalitarian" parallel processing of the data is not going to be easy in the alloted time
 	// (2 hrs), because lines are a mix of 1, several or many words
-	// if time allows, my approach in this will be to read the file in reasonaly even chunks, 
+	// if time allows, my approach in this will be to read the file in reasonably even chunks, 
 	// identify word start boundaries to determine job limits, then task the threads with 
 	// grinding through those instead
 
-    // prepare systems
-    //   prepare work queue
-
-	parallel::Worker::WorkerResult_t* result = new parallel::Worker::WorkerResult_t();
-
-    // begin processing
+	// begin processing
 	vector<string>* vec = new vector<string>();
 	// premature optimization to speed up file read into vector
-	vec->resize((2<<20) / 8); // 1MiB worth of 8-letter words...
+	vec->reserve((2 << 20) / 8); // initial storage estimate: 1MiB worth of 8-letter words...
 
+	// read in text file as vector of strings
 	util::parseFile(infile, *vec);
 
 	if (vec->size() == 0)
@@ -50,67 +45,26 @@ int main(int argc, const char** argv)
 		// no strings to process
 		exit(0);
 	}
-    
-    // MT processing
-	//   prepare worker threads
-	const unsigned int kNumWorkers = 8; // hardcode a worker pool of 4 threads for now
-	const unsigned int kBatchSize = (vec->size() / 8);
-	const unsigned int kBatchSizeOverrun = (vec->size() % 8);
-	 
-	// parallelised by operating on batches of vector entries, using interlocked exchange of long 
-	// to determine next working offset into vector
-	parallel::Worker** workers = new parallel::Worker*[kNumWorkers]
-	{
-		parallel::Worker::createWorker(*vec, 0, kBatchSize),
-		parallel::Worker::createWorker(*vec, kBatchSize, kBatchSize),
-		parallel::Worker::createWorker(*vec, kBatchSize * 2, kBatchSize),
-		parallel::Worker::createWorker(*vec, kBatchSize * 3, kBatchSize),
-		parallel::Worker::createWorker(*vec, kBatchSize * 4, kBatchSize),
-		parallel::Worker::createWorker(*vec, kBatchSize * 5, kBatchSize),
-		parallel::Worker::createWorker(*vec, kBatchSize * 6, kBatchSize),
-		parallel::Worker::createWorker(*vec, kBatchSize * 7, kBatchSize + kBatchSizeOverrun)
-	};
 
-	// wait for workers
-	unsigned int nProcessing;
-	do
-	{
-		nProcessing = 0;
-		for (unsigned int i = 0; i < kNumWorkers; ++i)
-		{
-			nProcessing += (workers[i]->isProcessing())
-				? 1
-				: 0;
-		}
-	}
-	while (nProcessing > 0);
+	vector<wordfreq::WordFrequency_t>* results = new vector<wordfreq::WordFrequency_t>();
+	results->reserve(vec->size());
 
-    // result
-	//   collate results from workers
-	for (unsigned int i = 0; i < kNumWorkers; ++i)
+	// process vector of strings
+	wordfreq::determineWordFrequency(*vec, *results);
+
+	//   report results
+	for (auto itr = results->cbegin(); itr != results->cend(); ++itr)
 	{
-		workers[i]->collateResults(*result);
+		cout << setw(20) << left << itr->first << setw(10) << left << "count: " << itr->second << endl;
 	}
 
-	//   sort results
-    //   report results
-	for (auto itr = result->cbegin(); itr != result->cend(); ++itr)
-	{
-		cout << "word: " << itr->second.first << "\t\tcount: " << itr->second.second << endl;
-	}
-
-	for (unsigned int i = 0; i < kNumWorkers; ++i)
-	{
-		delete workers[i];
-	}
-
-	delete workers;
+	// cleanup
 	delete vec;
-	delete result;
+	delete results;
 
 	// future?
-	//   investigate trie as storage option (map is faster option for homework)
+	//   investigate trie as option (map is faster option for homework)
 
-    return 0;
+	return 0;
 }
 

@@ -8,6 +8,7 @@
 
 namespace parallel
 {
+	// specific use-case worker thread for word-frequency calculation
 	class Worker
 	{
 		struct Data;
