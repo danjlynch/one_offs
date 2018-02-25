@@ -44,20 +44,20 @@ namespace wordfreq
 		parallel::Worker** workers = new parallel::Worker*[kNumWorkers]
 		{
 			parallel::Worker::createWorker(words, 0, kBatchSize),
-				parallel::Worker::createWorker(words, kBatchSize, kBatchSize),
-				parallel::Worker::createWorker(words, kBatchSize * 2, kBatchSize),
-				parallel::Worker::createWorker(words, kBatchSize * 3, kBatchSize),
-				parallel::Worker::createWorker(words, kBatchSize * 4, kBatchSize),
-				parallel::Worker::createWorker(words, kBatchSize * 5, kBatchSize),
-				parallel::Worker::createWorker(words, kBatchSize * 6, kBatchSize),
-				parallel::Worker::createWorker(words, kBatchSize * 7, kBatchSize + kBatchSizeOverrun)
+			parallel::Worker::createWorker(words, kBatchSize, kBatchSize),
+			parallel::Worker::createWorker(words, kBatchSize * 2, kBatchSize),
+			parallel::Worker::createWorker(words, kBatchSize * 3, kBatchSize),
+			parallel::Worker::createWorker(words, kBatchSize * 4, kBatchSize),
+			parallel::Worker::createWorker(words, kBatchSize * 5, kBatchSize),
+			parallel::Worker::createWorker(words, kBatchSize * 6, kBatchSize),
+			parallel::Worker::createWorker(words, kBatchSize * 7, kBatchSize + kBatchSizeOverrun)
 		};
 
 		// wait for workers
 		unsigned int nProcessing;
 		do
 		{
-			this_thread::sleep_for(chrono::milliseconds(10)); // I do *not* get this syntax... modern STL is weird...
+			this_thread::sleep_for(chrono::milliseconds(10));
 
 			nProcessing = 0;
 			for (unsigned int i = 0; i < kNumWorkers; ++i)
