@@ -1,4 +1,4 @@
-EA "Homework Assignment" Work log:
+"Homework Assignment" Work log:
 
 Sat 12:00
 - read email defining homework assignment
@@ -12,3 +12,11 @@ Sat 14:40
 Sat 17:00
 - it works!
 - bit of clean-up before zipping and sending
+
+Sat 21:15
+- add sorting
+- move main work logic from WordFrequency.cpp (enable use as "library" code in future versions)
+
+Sun 12.30
+- bit more clean-up
+- move output location for EXEs
