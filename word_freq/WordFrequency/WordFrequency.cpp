@@ -12,6 +12,7 @@ int main(int argc, const char** argv)
 {
 	if (argc != 2)
 	{
+		cerr << "usage: WordFrequency.exe <filename>" << endl;
 		exit(-1);
 	}
 
@@ -19,6 +20,7 @@ int main(int argc, const char** argv)
 
 	if (!infile.good())
 	{
+		cerr << "error: could not find file \"" << argv[1] << "\"" << endl;
 		exit(-1);
 	}
 
